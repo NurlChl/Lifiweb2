@@ -18,17 +18,29 @@ const PER_PAGE = 9
 
 export default async function BlogPage({ searchParams }: Props) {
   const page = Math.max(1, Number((await searchParams).page) || 1)
-  await dbConnect()
-
-  const [posts, total] = await Promise.all([
-    BlogPost.find({ published: true })
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * PER_PAGE)
-      .limit(PER_PAGE)
-      .select('title slug excerpt tags coverImage createdAt')
-      .lean(),
-    BlogPost.countDocuments({ published: true }),
-  ])
+  
+  // Try to fetch from DB, fallback to placeholder if unavailable
+  let posts: any[] = []
+  let total = 0
+  
+  try {
+    await dbConnect()
+    const [dbPosts, dbTotal] = await Promise.all([
+      BlogPost.find({ published: true })
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * PER_PAGE)
+        .limit(PER_PAGE)
+        .select('title slug excerpt tags coverImage createdAt')
+        .lean(),
+      BlogPost.countDocuments({ published: true }),
+    ])
+    posts = dbPosts
+    total = dbTotal
+  } catch (error) {
+    console.warn('Blog DB connection failed, showing placeholder content:', error)
+    posts = []
+    total = 0
+  }
 
   const totalPages = Math.ceil(total / PER_PAGE)
 

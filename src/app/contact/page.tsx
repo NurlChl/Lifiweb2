@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import { EnvelopeSimple, WhatsappLogo, MapPin, ArrowLeft } from '@phosphor-icons/react/ssr'
 import { Badge } from '@/components/ui/Badge'
 import { ContactForm } from './ContactForm'
 
@@ -18,19 +20,35 @@ export default function ContactPage() {
             Tell us about your project and we&apos;ll get back to you within 24 hours.
           </p>
           <div className="space-y-4">
-            <div className="rounded-lg border border-line-tertiary bg-bg-level-1 p-4">
-              <p className="text-mini text-fg-quaternary uppercase tracking-wider mb-1">Email</p>
-              <p className="text-regular text-fg-primary">hello@lifistudio.id</p>
+            <div className="rounded-lg border border-line-tertiary bg-bg-level-1 p-4 flex items-start gap-4">
+              <EnvelopeSimple size={20} className="text-accent mt-0.5 shrink-0" weight="duotone" />
+              <div>
+                <p className="text-mini text-fg-quaternary uppercase tracking-wider mb-1">Email</p>
+                <p className="text-regular text-fg-primary">hello@lifistudio.id</p>
+              </div>
             </div>
-            <div className="rounded-lg border border-line-tertiary bg-bg-level-1 p-4">
-              <p className="text-mini text-fg-quaternary uppercase tracking-wider mb-1">WhatsApp</p>
-              <p className="text-regular text-fg-primary">+62 851-2345-6789</p>
+            <div className="rounded-lg border border-line-tertiary bg-bg-level-1 p-4 flex items-start gap-4">
+              <WhatsappLogo size={20} className="text-accent mt-0.5 shrink-0" weight="duotone" />
+              <div>
+                <p className="text-mini text-fg-quaternary uppercase tracking-wider mb-1">WhatsApp</p>
+                <p className="text-regular text-fg-primary">+62 851-2345-6789</p>
+              </div>
             </div>
-            <div className="rounded-lg border border-line-tertiary bg-bg-level-1 p-4">
-              <p className="text-mini text-fg-quaternary uppercase tracking-wider mb-1">Location</p>
-              <p className="text-regular text-fg-primary">Mojokerto, Indonesia</p>
+            <div className="rounded-lg border border-line-tertiary bg-bg-level-1 p-4 flex items-start gap-4">
+              <MapPin size={20} className="text-accent mt-0.5 shrink-0" weight="duotone" />
+              <div>
+                <p className="text-mini text-fg-quaternary uppercase tracking-wider mb-1">Location</p>
+                <p className="text-regular text-fg-primary">Mojokerto, Indonesia</p>
+              </div>
             </div>
           </div>
+          <Link
+            href="/"
+            className="mt-8 inline-flex items-center gap-2 text-small text-fg-tertiary hover:text-fg-primary transition-colors"
+          >
+            <ArrowLeft size={14} className="rotate-180" weight="duotone" />
+            Back to Home
+          </Link>
         </div>
         <div className="rounded-xl border border-line-tertiary bg-bg-level-1 p-6 sm:p-8">
           <ContactForm />

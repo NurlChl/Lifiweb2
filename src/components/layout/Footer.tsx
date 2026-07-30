@@ -1,24 +1,37 @@
 import Link from 'next/link'
-import { NAV_LINKS } from '@/lib/constants'
 
 const footerLinks = {
-  Services: [
-    { label: 'Web Development', href: '/services' },
-    { label: 'UI/UX Design', href: '/services' },
-    { label: 'Automation', href: '/services' },
-    { label: 'Digital Strategy', href: '/services' },
+  Product: [
+    { label: 'Services', href: '/services' },
+    { label: 'Pricing', href: '#' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Changelog', href: '#' },
+  ],
+  Resources: [
+    { label: 'Documentation', href: '#' },
+    { label: 'Guides', href: '#' },
+    { label: 'Status', href: '#' },
+    { label: 'API', href: '#' },
   ],
   Company: [
     { label: 'About', href: '/about' },
-    { label: 'Blog', href: '/blog' },
+    { label: 'Careers', href: '#' },
     { label: 'Contact', href: '/contact' },
+    { label: 'Brand', href: '#' },
   ],
   Connect: [
     { label: 'GitHub', href: '#' },
-    { label: 'X / Twitter', href: '#' },
+    { label: 'Twitter', href: '#' },
+    { label: 'Instagram', href: '#' },
     { label: 'LinkedIn', href: '#' },
   ],
 }
+
+const bottomLinks = [
+  { label: 'Privacy', href: '#' },
+  { label: 'Terms', href: '#' },
+  { label: 'DPA', href: '#' },
+]
 
 export function Footer() {
   return (
@@ -59,8 +72,15 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Lifi Studio. All rights reserved.
           </p>
           <div className="flex gap-6 text-micro text-fg-quaternary">
-            <Link href="#" className="hover:text-fg-secondary transition-colors duration-200">Privacy</Link>
-            <Link href="#" className="hover:text-fg-secondary transition-colors duration-200">Terms</Link>
+            {bottomLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="hover:text-fg-secondary transition-colors duration-200"
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
