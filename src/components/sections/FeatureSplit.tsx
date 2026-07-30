@@ -113,7 +113,7 @@ export function FeatureSplit() {
                 <div className="mb-6 inline-flex size-12 items-center justify-center rounded-lg bg-accent-subtle text-accent">
                   {getIcon(feature.icon)}
                 </div>
-                <h3 className="text-title font-medium text-fg-primary mb-3">
+                <h3 className="text-h3 font-medium text-fg-primary mb-3">
                   {feature.title}
                 </h3>
                 <p className="text-regular text-fg-tertiary mb-6">

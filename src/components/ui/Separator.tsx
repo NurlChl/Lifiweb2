@@ -5,18 +5,25 @@ import { cn } from '@/lib/utils'
 
 export interface SeparatorProps extends HTMLAttributes<HTMLDivElement> {
   orientation?: 'horizontal' | 'vertical'
-  decorative?: boolean
+  variant?: 'default' | 'subtle' | 'strong'
 }
 
+const variantStyles = {
+  default: 'bg-line-primary',
+  subtle: 'bg-line-secondary',
+  strong: 'bg-line-tertiary',
+} as const
+
 export const Separator = forwardRef<HTMLDivElement, SeparatorProps>(
-  ({ orientation = 'horizontal', decorative = true, className, ...props }, ref) => (
+  ({ orientation = 'horizontal', variant = 'default', className, ...props }, ref) => (
     <div
       ref={ref}
-      role={decorative ? 'none' : 'separator'}
-      aria-orientation={decorative ? undefined : orientation}
+      role="separator"
+      aria-orientation={orientation}
       className={cn(
-        'bg-line-primary',
+        'transition-colors duration-200',
         orientation === 'horizontal' ? 'w-full h-px' : 'h-full w-px',
+        variantStyles[variant],
         className
       )}
       {...props}

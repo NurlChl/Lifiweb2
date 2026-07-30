@@ -13,14 +13,14 @@ const resourcesLinks = [
   { label: 'Updates', href: '/updates', description: 'Changelog & releases' },
   { label: 'Guides', href: '/guides', description: 'Deep dives & how-tos' },
   { label: 'Community', href: '/community', description: 'Discord & forum' },
-]
+] as const
 
 const companyLinks = [
   { label: 'About', href: '/about', description: 'Our story & values' },
   { label: 'Careers', href: '/careers', description: 'Join the team' },
   { label: 'Contact', href: '/contact', description: 'Get in touch' },
   { label: 'Brand', href: '/brand', description: 'Press kit & assets' },
-]
+] as const
 
 export function Header() {
   const pathname = usePathname()
@@ -51,7 +51,7 @@ export function Header() {
   }
 
   return (
-    <header className="fixed inset-x-0 top-4 z-50 flex justify-center px-4">
+    <header className="fixed inset-x-0 top-4 z-50 flex justify-center px-4" role="banner">
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -95,9 +95,9 @@ export function Header() {
                   >
                     Resources
                     <CaretDown
-                    size={10}
-                    weight="fill"
-                    className={cn('transition-transform duration-200', resourcesOpen && 'rotate-180')}
+                      size={10}
+                      weight="fill"
+                      className={cn('transition-transform duration-200', resourcesOpen && 'rotate-180')}
                     />
                   </button>
 
@@ -183,51 +183,77 @@ export function Header() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="md:hidden fixed inset-x-4 top-20 z-40 rounded-2xl border border-line-tertiary bg-bg-level-1/95 backdrop-blur-2xl p-6"
+            initial={{ opacity: 0, scale: 0.96, x: '100%' }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.96, x: '100%' }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="md:hidden fixed inset-0 top-0 z-[60] flex flex-col"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
           >
-            <div className="flex flex-col gap-1">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    'rounded-lg px-4 py-3 text-regular transition-colors',
-                    isActive(link.href)
-                      ? 'text-fg-primary bg-bg-level-2'
-                      : 'text-fg-tertiary hover:text-fg-secondary hover:bg-bg-level-1'
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 pt-20 pb-16 bg-bg-primary/98 backdrop-blur-xl">
+              <nav className="flex flex-col items-center gap-6 text-center">
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      'text-display font-medium transition-colors duration-200',
+                      isActive(link.href)
+                        ? 'text-fg-primary'
+                        : 'text-fg-tertiary hover:text-fg-secondary'
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+
+              <div className="w-full max-w-sm">
+                <p className="text-mini text-fg-quaternary text-center mb-4 uppercase tracking-[0.12em]">Resources</p>
+                <nav className="flex flex-col gap-2">
+                  {resourcesLinks.map((r) => (
+                    <Link
+                      key={r.href}
+                      href={r.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="text-small text-fg-tertiary hover:text-fg-secondary transition-colors duration-150 text-center py-2"
+                    >
+                      {r.label}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+
+              <div className="w-full max-w-sm">
+                <p className="text-mini text-fg-quaternary text-center mb-4 uppercase tracking-[0.12em]">Company</p>
+                <nav className="flex flex-col gap-2">
+                  {companyLinks.map((r) => (
+                    <Link
+                      key={r.href}
+                      href={r.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="text-small text-fg-tertiary hover:text-fg-secondary transition-colors duration-150 text-center py-2"
+                    >
+                      {r.label}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+
+              <Link
+                href="/contact"
+                onClick={() => setMobileOpen(false)}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-8 py-4 text-regular font-medium text-white hover:bg-accent-hover transition-all duration-200 active:scale-[0.98] shadow-lg shadow-accent/25"
+              >
+                Start a project
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
-            <div className="mt-4 pt-4 border-t border-line-tertiary">
-              {resourcesLinks.map((r) => (
-                <Link
-                  key={r.href}
-                  href={r.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="block rounded-lg px-4 py-2 text-small text-fg-tertiary hover:text-fg-secondary hover:bg-bg-level-1 transition-colors"
-                >
-                  {r.label}
-                </Link>
-              ))}
-            </div>
-            <Link
-              href="/contact"
-              onClick={() => setMobileOpen(false)}
-              className="mt-4 flex items-center justify-center gap-2 rounded-full bg-accent py-3 text-regular font-medium text-white"
-            >
-              Start a project
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </Link>
           </motion.div>
         )}
       </AnimatePresence>

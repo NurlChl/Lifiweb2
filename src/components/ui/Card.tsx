@@ -4,7 +4,7 @@ import { forwardRef, type HTMLAttributes, type ReactNode, type CSSProperties } f
 import { motion, type HTMLMotionProps } from 'motion/react'
 import { cn } from '@/lib/utils'
 
-interface CardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
+export interface CardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
   children: ReactNode
   variant?: 'default' | 'elevated' | 'outlined'
   padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl'
@@ -16,7 +16,7 @@ const variantStyles = {
   default: 'bg-bg-level-1 border border-line-tertiary',
   elevated: 'bg-bg-level-1 shadow-lg',
   outlined: 'bg-transparent border border-line-primary',
-}
+} as const
 
 const paddingStyles: Record<string, string> = {
   none: '',
@@ -36,13 +36,13 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       asChild = false,
       className,
       style,
+      whileHover,
       ...props
     },
     ref
   ) => {
     const Component = asChild ? 'div' : motion.div
 
-    // When asChild is true, we need to filter out motion-specific props
     const componentProps = asChild
       ? {
           ref,
@@ -79,7 +79,7 @@ CardHeader.displayName = 'CardHeader'
 
 export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadingElement>>(
   ({ className, children, ...props }, ref) => (
-    <h3 ref={ref} className={cn('text-title font-medium text-fg-primary', className)} {...props}>
+    <h3 ref={ref} className={cn('text-h2 font-medium text-fg-primary', className)} {...props}>
       {children}
     </h3>
   )

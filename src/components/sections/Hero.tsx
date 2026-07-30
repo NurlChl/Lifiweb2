@@ -2,7 +2,7 @@
 
 import { motion } from 'motion/react'
 import Link from 'next/link'
-import { ArrowRight, Code, Palette, Gear, Eye, Sparkle, Check, RocketLaunch, Brain, TrendUp, GitPullRequest, ChartBar } from '@phosphor-icons/react/ssr'
+import { ArrowRight, Code, Palette, Gear, Eye, Sparkle, RocketLaunch, Brain, TrendUp, GitPullRequest, ChartBar } from '@phosphor-icons/react/ssr'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui'
 import { revealVariants, staggerContainer, staggerItem, cardHoverVariants } from '@/lib/animations'
@@ -14,14 +14,14 @@ const floatingIcons = [
   { Icon: Eye, color: 'text-red', delay: 3 },
   { Icon: Sparkle, color: 'text-accent', delay: 4 },
   { Icon: RocketLaunch, color: 'text-green', delay: 5 },
-]
+] as const
 
 const stats = [
   { value: '40+', label: 'Products shipped' },
   { value: '95%', label: 'Client retention' },
   { value: '3x', label: 'Faster delivery with AI' },
   { value: '24/7', label: 'Support coverage' },
-]
+] as const
 
 export function Hero() {
   return (
@@ -58,7 +58,7 @@ export function Hero() {
               variants={staggerItem}
               className="text-large text-fg-tertiary max-w-[600px] mb-10 leading-[1.7]"
             >
-              We design and ship digital products — web apps, mobile apps, AI integrations, and design systems. 
+              We design and ship digital products — web apps, mobile apps, AI integrations, and design systems.
               Purpose-built for the AI era. Purpose-built for velocity.
             </motion.p>
 

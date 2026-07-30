@@ -1,10 +1,9 @@
 'use client'
 
-import { motion, type Transition } from 'motion/react'
-import Image from 'next/image'
+import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { CLIENTS } from '@/lib/constants'
-import { revealVariants, staggerContainer, staggerItem, ease } from '@/lib/animations'
+import { revealVariants, staggerContainer, staggerItem } from '@/lib/animations'
 
 export function SocialProof() {
   return (
@@ -18,11 +17,11 @@ export function SocialProof() {
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.5, ease: ease as Transition['ease'] }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
           Trusted by teams at
         </motion.p>
-        
+       
         <motion.div
           className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 lg:gap-16"
           variants={staggerContainer}

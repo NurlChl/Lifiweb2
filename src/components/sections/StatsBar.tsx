@@ -6,7 +6,7 @@ import { STATS } from '@/lib/constants'
 
 export function StatsBar() {
   return (
-    <section className="section border-y border-line-tertiary" aria-label="Statistics">
+    <section className="section-lg border-y border-line-tertiary" aria-label="Statistics">
       <div className="container-main">
         <motion.div
           className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12"

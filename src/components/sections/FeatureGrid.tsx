@@ -13,7 +13,7 @@ const getIcon = (name: string) => {
     case 'Robot': return <Robot size={24} weight="light" />
     case 'Compass': return <Compass size={24} weight="light" />
     case 'ArrowRight': return <ArrowRight size={24} weight="light" />
-    case 'TrendingUp': return <TrendUp size={24} weight="light" />
+    case 'TrendUp': return <TrendUp size={24} weight="light" />
     case 'GitPullRequest': return <GitPullRequest size={24} weight="light" />
     case 'Brain': return <Brain size={24} weight="light" />
     default: return <Robot size={24} weight="light" />
@@ -55,16 +55,16 @@ export function FeatureGrid() {
               variants={staggerItem}
               className="group"
             >
-              <Card 
-                variant="default" 
-                padding="lg" 
+              <Card
+                variant="default"
+                padding="lg"
                 hover
                 className="h-full flex flex-col"
               >
                 <div className={cn('mb-6 inline-flex size-12 items-center justify-center rounded-lg', `bg-${feature.accent}-subtle text-${feature.accent}`)}>
                   {getIcon(feature.icon)}
                 </div>
-                <h3 className="text-title font-medium text-fg-primary mb-3">
+                <h3 className="text-h3 font-medium text-fg-primary mb-3">
                   {feature.title}
                 </h3>
                 <p className="text-regular text-fg-tertiary mb-6 flex-1">

@@ -15,12 +15,12 @@ const variantStyles = {
   warning: 'bg-amber-500/15 text-amber-500 border border-amber-500/20',
   error: 'bg-red-500/15 text-red-500 border border-red-500/20',
   outline: 'bg-transparent text-fg-secondary border border-line-primary',
-}
+} as const
 
 const sizeStyles = {
   sm: 'px-2 py-0.5 text-tiny',
   md: 'px-3 py-1 text-mini',
-}
+} as const
 
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
   ({ variant = 'default', size = 'md', className, children, ...props }, ref) => (

@@ -1,6 +1,7 @@
 'use client'
 
-import { forwardRef, type ButtonHTMLAttributes } from 'react'
+import { forwardRef, type ButtonHTMLAttributes, type ComponentPropsWithoutRef } from 'react'
+import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -8,8 +9,30 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'sm' | 'md' | 'lg'
   loading?: boolean
   fullWidth?: boolean
-  asChild?: never
 }
+
+const variantStyles = {
+  primary: 'bg-accent text-white hover:bg-accent-hover active:scale-[0.98] shadow-lg shadow-accent/25',
+  secondary: 'bg-bg-level-2 text-fg-primary border border-line-primary hover:bg-bg-level-3 hover:border-line-secondary',
+  ghost: 'bg-transparent text-fg-secondary hover:bg-bg-level-1 hover:text-fg-primary border border-line-primary',
+  outline: 'bg-transparent text-fg-primary border border-line-primary hover:bg-bg-level-1 hover:border-accent',
+  text: 'bg-transparent text-fg-secondary hover:text-fg-primary underline-offset-4 hover:underline',
+} as const
+
+const sizeStyles = {
+  sm: 'px-4 py-2 text-small',
+  md: 'px-6 py-2.5 text-small',
+  lg: 'px-8 py-3 text-regular',
+} as const
+
+// Type for motion button props we want to allow
+type MotionButtonProps = {
+  whileHover?: { scale: number; y: number } | undefined
+  whileTap?: { scale: number } | undefined
+}
+
+// Native HTML button props (no motion-specific events)
+type NativeButtonProps = Omit<ComponentPropsWithoutRef<'button'>, keyof MotionButtonProps | 'children'>
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -27,13 +50,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const isDisabled = disabled || loading
 
+    const motionProps: MotionButtonProps = {
+      whileHover: !isDisabled ? { scale: 1.02, y: -1 } : undefined,
+      whileTap: !isDisabled ? { scale: 0.98 } : undefined,
+    }
+
+    // Spread native props only - TypeScript won't include motion-specific ones
+    const nativeProps = props as NativeButtonProps
+
     return (
-      <button
+      <motion.button
         ref={ref}
         disabled={isDisabled}
         className={cn(
           'inline-flex items-center justify-center gap-2 font-medium rounded-full',
-          'transition-all duration-150 ease-linear',
+          'transition-all duration-150 ease-[0.16,1,0.3,1]',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary',
           'disabled:opacity-50 disabled:cursor-not-allowed',
           variantStyles[variant],
@@ -41,7 +72,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           fullWidth && 'w-full',
           className
         )}
-        {...props}
+        {...motionProps}
+        {...(nativeProps as any)}
       >
         {loading && (
           <svg
@@ -49,6 +81,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
           >
             <circle
               className="opacity-25"
@@ -66,23 +99,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           </svg>
         )}
         {children}
-      </button>
+      </motion.button>
     )
   }
 )
 
 Button.displayName = 'Button'
-
-const variantStyles = {
-  primary: 'bg-accent text-white hover:bg-accent-hover active:scale-[0.98] shadow-lg shadow-accent/25',
-  secondary: 'bg-bg-level-2 text-fg-primary border border-line-primary hover:bg-bg-level-3 hover:border-line-secondary',
-  ghost: 'bg-transparent text-fg-secondary hover:bg-bg-level-1 hover:text-fg-primary',
-  outline: 'bg-transparent text-fg-primary border border-line-primary hover:bg-bg-level-1 hover:border-accent',
-  text: 'bg-transparent text-fg-secondary hover:text-fg-primary underline-offset-4 hover:underline',
-}
-
-const sizeStyles = {
-  sm: 'px-4 py-2 text-small',
-  md: 'px-6 py-2.5 text-small',
-  lg: 'px-8 py-3 text-regular',
-}

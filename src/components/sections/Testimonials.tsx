@@ -3,7 +3,8 @@
 import { motion } from 'motion/react'
 import { Avatar } from '@/components/ui/Avatar'
 import { Card } from '@/components/ui/Card'
-import { TESTIMONIALS, revealVariants, staggerContainer, staggerItem } from '@/lib/constants'
+import { TESTIMONIALS } from '@/lib/constants'
+import { revealVariants, staggerContainer, staggerItem } from '@/lib/animations'
 import { Quotes } from '@phosphor-icons/react/ssr'
 
 export function Testimonials() {

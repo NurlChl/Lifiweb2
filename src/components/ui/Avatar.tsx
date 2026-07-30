@@ -1,70 +1,77 @@
 'use client'
 
-import { forwardRef, type ImgHTMLAttributes, useState } from 'react'
+import { forwardRef, type HTMLAttributes, type ImgHTMLAttributes, Children } from 'react'
 import { cn } from '@/lib/utils'
-import { User } from '@phosphor-icons/react/ssr'
 
-export interface AvatarProps extends ImgHTMLAttributes<HTMLImageElement> {
+export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
+  src?: string
   alt?: string
   fallback?: string
-  size?: 'sm' | 'md' | 'lg' | 'xl'
-  shape?: 'circle' | 'square'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 }
 
 const sizeStyles = {
-  sm: 'h-8 w-8 text-tiny',
-  md: 'h-10 w-10 text-small',
-  lg: 'h-12 w-12 text-regular',
-  xl: 'h-16 w-16 text-large',
+  xs: 'size-6 text-tiny',
+  sm: 'size-8 text-micro',
+  md: 'size-10 text-small',
+  lg: 'size-12 text-regular',
+  xl: 'size-16 text-large',
+} as const
+
+export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
+  ({ src, alt, fallback, size = 'md', className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        'relative inline-flex shrink-0 overflow-hidden rounded-full bg-bg',
+        sizeStyles[size],
+        className
+      )}
+      {...props}
+    >
+      {src ? (
+        <img
+          src={src}
+          alt={alt || fallback || 'Avatar'}
+          className="aspect-square h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center rounded-full bg-accent-subtle text-accent font-medium">
+          {fallback || '?'}
+        </div>
+      )}
+    </div>
+  )
+)
+
+Avatar.displayName = 'Avatar'
+
+export interface AvatarGroupProps extends HTMLAttributes<HTMLDivElement> {
+  max?: number
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 }
 
-export const Avatar = forwardRef<HTMLImageElement, AvatarProps>(
-  ({ alt, fallback, size = 'md', shape = 'circle', className, src, onError, ...props }, ref) => {
-    const [hasError, setHasError] = useState(false)
-
-    const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-      setHasError(true)
-      onError?.(e)
-    }
-
-    if (hasError || !src) {
-      return (
-        <div
-          ref={ref}
-          className={cn(
-            'inline-flex items-center justify-center bg-bg-level-2 border border-line-primary',
-            'font-medium text-fg-tertiary select-none',
-            sizeStyles[size],
-            shape === 'circle' ? 'rounded-full' : 'rounded-lg',
-            className
-          )}
-          aria-label={alt || fallback || 'Avatar'}
-        >
-          {fallback ? (
-            <span>{fallback}</span>
-          ) : (
-            <User size={size === 'sm' ? 12 : size === 'md' ? 16 : size === 'lg' ? 20 : 28} weight="light" />
-          )}
-        </div>
-      )
-    }
+export const AvatarGroup = forwardRef<HTMLDivElement, AvatarGroupProps>(
+  ({ children, max = 5, size = 'md', className, ...props }, ref) => {
+    const childrenArray = Children.toArray(children) as React.ReactElement[]
+    const avatars = childrenArray.slice(0, max)
+    const remaining = childrenArray.length - max
 
     return (
-      <img
-        ref={ref}
-        src={src}
-        alt={alt || ''}
-        onError={handleError}
-        className={cn(
-          'object-cover',
-          sizeStyles[size],
-          shape === 'circle' ? 'rounded-full' : 'rounded-lg',
-          className
+      <div ref={ref} className={cn('flex -space-x-2', className)} {...props}>
+        {avatars.map((child, index) => (
+          <span key={index} className="relative z-[auto]">
+            {child}
+          </span>
+        ))}
+        {remaining > 0 && (
+          <span className={cn('flex items-center justify-center rounded-full border-2 border-bg-primary', sizeStyles[size])}>
+            +{remaining}
+          </span>
         )}
-        {...props}
-      />
+      </div>
     )
   }
 )
 
-Avatar.displayName = 'Avatar'
+AvatarGroup.displayName = 'AvatarGroup'
