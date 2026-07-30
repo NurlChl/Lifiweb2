@@ -38,11 +38,11 @@ const post = {
 
 async function publish() {
   await mongoose.connect(MONGODB_URI)
-  const existing = await mongoose.connection.db.collection('blogposts').findOne({ slug: post.slug })
+  const existing = await mongoose.connection.db!.collection('blogposts').findOne({ slug: post.slug })
   if (existing) {
     console.log('→ Post already exists, skipping')
   } else {
-    await mongoose.connection.db.collection('blogposts').insertOne(post)
+    await mongoose.connection.db!.collection('blogposts').insertOne(post)
     console.log('✓ Blog post published')
   }
   await mongoose.disconnect()
