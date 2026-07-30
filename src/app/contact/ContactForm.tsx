@@ -1,171 +1,215 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { motion, AnimatePresence, useAnimate } from 'motion/react'
-import { z } from 'zod'
-import { Input } from '@/components/ui/Input'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
 import { Button } from '@/components/ui/Button'
-import { PaperPlaneRight, CheckCircle, WarningCircle } from '@phosphor-icons/react'
+import { Input } from '@/components/ui/Input'
+import { Textarea } from '@/components/ui/Input'
+import { Card } from '@/components/ui/Card'
+import { CheckCircle, WarningCircle } from '@phosphor-icons/react/ssr'
 
-const schema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().optional(),
-  message: z.string().min(10, 'Message must be at least 10 characters'),
-})
+interface FormData {
+  name: string
+  email: string
+  phone: string
+  subject: string
+  message: string
+}
 
-type FormData = z.infer<typeof schema>
-type FormErrors = Partial<Record<keyof FormData, string>>
+interface FormErrors {
+  name?: string
+  email?: string
+  phone?: string
+  subject?: string
+  message?: string
+}
 
-export function ContactForm() {
-  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+export default function ContactForm() {
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: '',
+  })
   const [errors, setErrors] = useState<FormErrors>({})
-  const [scope, animate] = useAnimate()
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState('')
 
-  const validate = useCallback((data: FormData): FormErrors => {
-    const result = schema.safeParse(data)
-    if (!result.success) {
-      const fieldErrors: FormErrors = {}
-      for (const issue of result.error.issues) {
-        const field = issue.path[0] as keyof FormData
-        if (!fieldErrors[field]) fieldErrors[field] = issue.message
-      }
-      return fieldErrors
-    }
-    return {}
-  }, [])
+  const validate = (data: FormData): FormErrors => {
+    const newErrors: FormErrors = {}
+    if (!data.name.trim()) newErrors.name = 'Name is required'
+    if (!data.email.trim()) newErrors.email = 'Email is required'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) newErrors.email = 'Invalid email format'
+    if (!data.subject.trim()) newErrors.subject = 'Subject is required'
+    if (!data.message.trim()) newErrors.message = 'Message is required'
+    else if (data.message.trim().length < 20) newErrors.message = 'Message must be at least 20 characters'
+    return newErrors
+  }
 
-  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const form = e.currentTarget
-    const data = Object.fromEntries(new FormData(form)) as FormData
-
-    const fieldErrors = validate(data)
-    if (Object.keys(fieldErrors).length > 0) {
-      setErrors(fieldErrors)
+    const newErrors = validate(formData)
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
       return
     }
 
     setErrors({})
-    setState('sending')
+    setStatus('submitting')
+    setErrorMessage('')
 
     try {
-      const res = await fetch('/api/contact', {
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formData),
       })
 
-      if (!res.ok) throw new Error()
-      await animate(scope.current, { opacity: [1, 0], y: [0, -20] }, { duration: 0.2 })
-      setState('sent')
-    } catch {
-      setState('error')
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || 'Something went wrong')
+      }
+
+      setStatus('success')
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
+    } catch (err) {
+      setStatus('error')
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to send message. Please try again.')
     }
-  }, [validate, animate, scope])
+  }
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setErrors((prev) => ({ ...prev, [name]: undefined }))
-    if (state === 'error' || state === 'sent') setState('idle')
-  }, [state])
-
-  if (state === 'sent') {
-    return (
-      <AnimatePresence mode="wait">
-        <motion.div
-          key="sent"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="text-center py-20 rounded-xl border border-line-tertiary bg-bg-level-1"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            className="inline-flex items-center justify-center size-16 rounded-full bg-green-500/10 mb-4"
-          >
-            <CheckCircle size={32} weight="fill" className="text-green-500" />
-          </motion.div>
-          <p className="text-title text-fg-primary mb-2">Message sent!</p>
-          <p className="text-regular text-fg-tertiary">We&apos;ll get back to you soon.</p>
-        </motion.div>
-      </AnimatePresence>
-    )
+    setFormData(prev => ({ ...prev, [name]: value }))
+    if (errors[name as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }))
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" ref={scope}>
-      <AnimatePresence mode="popLayout">
-        {state === 'error' && (
+    <Card variant="default" padding="xl">
+      <h2 className="text-title font-medium text-fg-primary mb-8">Send us a message</h2>
+
+      <AnimatePresence mode="wait">
+        {status === 'success' && (
           <motion.div
-            key="error"
-            initial={{ opacity: 0, y: -10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -10, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="rounded-lg bg-red-500/10 border border-red-500/30 p-4 flex items-center gap-3 text-sm text-red-500"
-            role="alert"
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            className="mb-8 p-6 rounded-xl bg-green-500/10 border border-green-500/20"
           >
-            <WarningCircle size={20} weight="fill" className="flex-shrink-0" />
-            <span>Something went wrong. Please try again.</span>
+            <div className="flex items-center gap-3">
+              <CheckCircle size={24} weight="fill" className="text-green-500" />
+              <div>
+                <p className="text-regular font-medium text-green-500">Message sent!</p>
+                <p className="text-small text-fg-tertiary">We&apos;ll get back to you within 24 hours.</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {status === 'error' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            className="mb-8 p-6 rounded-xl bg-red-500/10 border border-red-500/20"
+          >
+            <div className="flex items-center gap-3">
+              <WarningCircle size={24} weight="fill" className="text-red-500" />
+              <div>
+                <p className="text-regular font-medium text-red-500">Something went wrong</p>
+                <p className="text-small text-fg-tertiary">{errorMessage}</p>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="grid sm:grid-cols-2 gap-6">
-        <Input
-          label="Name"
-          id="name"
-          name="name"
-          required
-          placeholder="Your name"
-          error={errors.name}
-          onChange={handleChange}
-        />
-        <Input
-          label="Email"
-          id="email"
-          name="email"
-          type="email"
-          required
-          placeholder="you@example.com"
-          error={errors.email}
-          onChange={handleChange}
-        />
-      </div>
-      <Input
-        label="Phone (optional)"
-        id="phone"
-        name="phone"
-        type="tel"
-        placeholder="+62..."
-        error={errors.phone}
-        onChange={handleChange}
-      />
-      <div className="space-y-2">
-        <label htmlFor="message" className="text-small text-fg-secondary block">
-          Message
-        </label>
-        <textarea
-          id="message"
+      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+        <div className="grid md:grid-cols-2 gap-6">
+          <Input
+            label="Full name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            error={errors.name}
+            placeholder="Nurul Cholil"
+            required
+            autoComplete="name"
+          />
+          <Input
+            label="Email"
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            error={errors.email}
+            placeholder="nurul@company.com"
+            required
+            autoComplete="email"
+          />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <Input
+            label="Phone (optional)"
+            type="tel"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder="+62 8xx-xxxx-xxxx"
+            autoComplete="tel"
+          />
+          <select
+            name="subject"
+            value={formData.subject}
+            onChange={handleChange}
+            required
+            className="w-full"
+            aria-invalid={errors.subject ? 'true' : 'false'}
+            aria-describedby={errors.subject ? 'subject-error' : undefined}
+          >
+            <option value="">Select a topic</option>
+            <option value="web-app">Web Application Development</option>
+            <option value="mobile-app">Mobile App Development</option>
+            <option value="ai-integration">AI Integration</option>
+            <option value="design-system">Design System</option>
+            <option value="consulting">Technical Consulting</option>
+            <option value="other">Other</option>
+          </select>
+          {errors.subject && (
+            <p id="subject-error" className="mt-1.5 text-micro text-red-500" role="alert">
+              {errors.subject}
+            </p>
+          )}
+        </div>
+
+        <Textarea
+          label="Message"
           name="message"
+          value={formData.message}
+          onChange={handleChange}
+          error={errors.message}
+          placeholder="Tell us about your project, timeline, budget, and anything else we should know..."
           required
           rows={5}
-          placeholder="Tell us about your project..."
-          className="w-full rounded-lg border border-line-primary bg-bg-level-1 px-4 py-3 text-regular text-fg-primary placeholder:text-fg-quaternary focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25 transition-all duration-200 resize-y"
-          onChange={handleChange}
         />
-        {errors.message && (
-          <p className="text-micro text-red-500" role="alert">{errors.message}</p>
-        )}
-      </div>
-      <Button type="submit" loading={state === 'sending'} className="w-full sm:w-auto">
-        Send Message
-        <PaperPlaneRight size={16} />
-      </Button>
-    </form>
+
+        <Button
+        type="submit"
+        size="lg"
+        fullWidth
+        loading={status === 'submitting'}
+        >
+        {status === 'submitting' ? 'Sending...' : 'Send message'}
+        </Button>
+
+        <p className="text-center text-mini text-fg-quaternary">
+          By submitting, you agree to our <a href="/privacy" className="text-accent hover:underline">Privacy Policy</a> and <a href="/terms" className="text-accent hover:underline">Terms of Service</a>.
+        </p>
+      </form>
+    </Card>
   )
 }

@@ -1,213 +1,400 @@
-# LifiWeb2 — Architecture Guide
+# Lifi Studio — Architecture (Linear.app exact match)
 
-## Stack
+> Next.js 16 App Router, React 19, TypeScript, Tailwind v4, motion/react. Dark-only, server-first, minimal deps.
 
-| Layer | Tech | Rationale |
-|-------|------|-----------|
-| Framework | Next.js 16 (App Router + Turbopack) | SSR/CSR hybrid, RSC, file-based routing |
-| Styling | Tailwind CSS v4 | CSS-first design tokens, dark mode native, `@theme` directive |
-| Database | MongoDB 7 + Mongoose | Document DB, flexible for CMS content |
-| Auth | NextAuth.js v5 (Auth.js) — Credentials | JWT sessions, admin-only auth |
-| Proxy | `proxy.ts` (Next.js 16, replaces middleware) | Route-level auth guard for `/admin/*` |
-| Icons | `@phosphor-icons/react` (60KB tree-shakeable) | Consistent, premium, Linear-style iconography |
-| Font | Inter Variable via `next/font/google` | Linear-native typography (weight 510 H1) |
-| Animation | `motion/react` (ex-Framer Motion) | Scroll reveals, micro-interactions, stagger |
-| Assets | Cloudinary | Image/video upload via admin CMS + optimized delivery |
-| Email | Resend (optional) | Contact form submissions |
-| Validation | Zod | Form/API input validation |
-| SEO | Dynamic sitemap + robots.txt + Open Graph | SSR metadata per page, geo-optimized |
+---
 
-## Directory Structure
+## 1. Tech Stack
+
+| Layer | Technology | Version |
+|-------|------------|---------|
+| Framework | Next.js (App Router) | 16.x (Turbopack) |
+| Runtime | React | 19.x (RC) |
+| Language | TypeScript | 5.x strict |
+| Styling | Tailwind CSS | 4.x (Oxide) |
+| Animation | motion/react | 12.x |
+| Icons | @phosphor-icons/react | 2.x (Light weight) |
+| Font | Inter Variable | next/font/google |
+| DB | MongoDB (Mongoose) | 8.x |
+| Auth | NextAuth.js | 5.x (beta) |
+| Images | Cloudinary | 2.x |
+| Validation | Zod | 3.x |
+| Package Mgr | pnpm | 9.x |
+
+---
+
+## 2. Project Structure
 
 ```
 src/
-├── app/                          # Next.js App Router
-│   ├── layout.tsx                # Root layout (Inter font, metadata, header/footer)
-│   ├── page.tsx                  # Home page (SSR)
-│   ├── globals.css               # Tailwind + Linear design tokens
-│   ├── not-found.tsx             # Custom 404
-│   ├── error.tsx                 # Error boundary (CSR)
-│   ├── sitemap.ts                # Dynamic sitemap from blog posts
-│   ├── robots.ts                 # Robots.txt with admin paths blocked
-│   ├── about/page.tsx            # About page (SSR)
-│   ├── services/page.tsx         # Services page (SSR)
-│   ├── blog/
-│   │   ├── page.tsx              # Blog list — SSR + pagination via URL searchParams
-│   │   └── [slug]/page.tsx       # Blog detail — SSR, generateMetadata
+├── app/
+│   ├── layout.tsx          # Root layout, fonts, providers
+│   ├── page.tsx            # Homepage (Linear hero + sections)
+│   ├── globals.css         # Design tokens + Tailwind v4 @theme
+│   ├── services/
+│   │   └── page.tsx        # Services (Linear pricing-style)
+│   ├── about/
+│   │   └── page.tsx        # About (Linear values-style)
 │   ├── contact/
-│   │   ├── page.tsx              # Contact page shell (SSR metadata)
-│   │   └── ContactForm.tsx       # Contact form — CSR, fetch-based submit
+│   │   ├── page.tsx        # Contact page
+│   │   └── ContactForm.tsx # Client form component
+│   ├── blog/
+│   │   ├── page.tsx        # Blog index (Linear changelog-style)
+│   │   └── [slug]/
+│   │       └── page.tsx    # Blog detail
+│   ├── updates/
+│   │   └── page.tsx        # Updates / changelog
 │   ├── admin/
-│   │   ├── layout.tsx            # Admin sidebar + SessionProvider
-│   │   ├── login/page.tsx        # Admin login — CSR, signIn()
-│   │   ├── dashboard/page.tsx    # Dashboard stats — SSR, dbConnect
+│   │   ├── layout.tsx      # Admin layout + auth guard
+│   │   ├── login/page.tsx  # Login page
+│   │   ├── dashboard/page.tsx
 │   │   ├── blog/
-│   │   │   ├── page.tsx          # Blog CRUD list — SSR
-│   │   │   └── [id]/
-│   │   │       ├── page.tsx      # SSR shell with auth check
-│   │   │       └── AdminBlogEditor.tsx  # CSR form
+│   │   │   ├── page.tsx
+│   │   │   ├── new/page.tsx
+│   │   │   └── [id]/page.tsx
 │   │   └── services/
-│   │       ├── page.tsx          # Services CRUD list — SSR
-│   │       └── [id]/
-│   │           └── page.tsx      # Service editor
-│   └── api/
-│       ├── auth/[...nextauth]/route.ts  # NextAuth handlers
-│       ├── blog/route.ts                # GET (list) + POST (create)
-│       ├── blog/[id]/route.ts           # GET + PATCH + DELETE
-│       ├── services/route.ts            # GET + POST
-│       ├── services/[id]/route.ts       # GET + PATCH + DELETE
-│       ├── contact/route.ts             # POST (public)
-│       ├── upload/route.ts              # POST (Cloudinary upload, admin-only)
-│       └── subscribe/route.ts           # GET (SSE heartbeat)
+│   │       ├── page.tsx
+│   │       ├── new/page.tsx
+│   │       └── [id]/page.tsx
+│   ├── api/
+│   │   ├── auth/[...nextauth]/route.ts
+│   │   ├── blog/route.ts
+│   │   ├── blog/[id]/route.ts
+│   │   ├── services/route.ts
+│   │   ├── services/[id]/route.ts
+│   │   ├── contact/route.ts
+│   │   ├── upload/route.ts
+│   │   └── subscribe/route.ts
+│   ├── not-found.tsx
+│   ├── error.tsx
+│   └── loading.tsx
 ├── components/
-│   ├── ui/                      # Primitive components
-│   │   ├── Button.tsx           # primary/ghost/outline variants, loading state
-│   │   ├── Card.tsx             # Hover-aware card container
-│   │   ├── Input.tsx            # Label + error state
-│   │   ├── Skeleton.tsx         # Shimmer loading placeholder
-│   │   └── Badge.tsx            # Status badge
+│   ├── ui/                 # Primitive components
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   ├── Textarea.tsx
+│   │   ├── Label.tsx
+│   │   ├── Card.tsx
+│   │   ├── Badge.tsx
+│   │   ├── Separator.tsx
+│   │   ├── Accordion.tsx
+│   │   ├── Avatar.tsx
+│   │   └── index.ts
 │   ├── layout/
-│   │   ├── Header.tsx           # Floating island nav (CSR)
-│   │   └── Footer.tsx           # Multi-column footer with links
-│   └── sections/
-│       ├── Hero.tsx             # Asymmetric hero with motion
-│       ├── Features.tsx         # 3-column feature grid with icons
-│       └── CTASection.tsx       # Bottom CTA banner
+│   │   ├── Header.tsx      # Floating nav island
+│   │   ├── Footer.tsx      # Linear-style footer
+│   │   ├── PageContainer.tsx
+│   │   └── Section.tsx
+│   ├── sections/
+│   │   ├── Hero.tsx
+│   │   ├── SocialProof.tsx
+│   │   ├── FeatureGrid.tsx
+│   │   ├── FeatureCard.tsx
+│   │   ├── FeatureSplit.tsx
+│   │   ├── Changelog.tsx
+│   │   ├── Testimonials.tsx
+│   │   ├── CTA.tsx
+│   │   └── StatsBar.tsx
+│   ├── blog/
+│   │   ├── BlogCard.tsx
+│   │   ├── BlogGrid.tsx
+│   │   └── BlogHero.tsx
+│   └── admin/
+│       ├── AdminLayout.tsx
+│       ├── AdminSidebar.tsx
+│       ├── BlogEditor.tsx
+│       ├── ServiceEditor.tsx
+│       └── UploadZone.tsx
 ├── lib/
-│   ├── mongodb.ts               # MongoDB connection singleton (cached global)
-│   ├── auth.ts                  # NextAuth v5 config (Credentials provider)
-│   ├── utils.ts                 # cn(), formatDate()
-│   ├── constants.ts             # SITE metadata, NAV_LINKS
-│   └── cloudinary/index.ts      # Cloudinary client + upload helpers
-├── models/                      # Mongoose schemas
-│   ├── User.ts                  # Admin user (email, password, role)
-│   ├── BlogPost.ts              # title, slug, excerpt, content, tags, published
-│   ├── Service.ts               # title, slug, description, icon, order
-│   └── Contact.ts               # name, email, phone, message, read
-├── proxy.ts                     # Next.js 16 auth guard for /admin/*
-└── hooks/
-    └── useSSE.ts                # EventSource subscription hook
+│   ├── constants.ts        # NAV_LINKS, SITE config
+│   ├── utils.ts            # cn(), formatDate(), slugify()
+│   ├── mongodb.ts          # Mongoose connection singleton
+│   ├── auth.ts             # NextAuth config
+│   ├── cloudinary.ts       # Upload helper
+│   └── animations.ts       # motion variants, transitions
+├── models/
+│   ├── BlogPost.ts
+│   ├── Service.ts
+│   ├── User.ts
+│   └── Subscriber.ts
+├── hooks/
+│   ├── useScrollReveal.ts
+│   ├── useReducedMotion.ts
+│   └── useMobile.ts
+├── types/
+│   └── index.ts
+└── middleware.ts           # Auth protection for /admin
 ```
 
-## Data Models & Relations
+---
 
-```mermaid
-erDiagram
-    User ||--o{ BlogPost : authors
-    User {}
-    BlogPost {
-        string title
-        string slug
-        text excerpt
-        text content
-        string[] tags
-        boolean published
-        string author
-        date createdAt
-    }
-    Service {
-        string title
-        string slug
-        text description
-        string icon
-        int order
-    }
-    Contact {
-        string name
-        string email
-        string phone
-        text message
-        boolean read
-    }
+## 3. Data Models
+
+### BlogPost
+```typescript
+{
+  title: string
+  slug: string (unique, index)
+  excerpt: string
+  content: string (HTML/markdown)
+  coverImage: string (Cloudinary URL)
+  tags: string[]
+  author: string
+  published: boolean
+  publishedAt: Date
+  seoTitle: string
+  seoDescription: string
+  createdAt: Date
+  updatedAt: Date
+}
 ```
 
-> **ponytail note:** Relations are implicit through Mongoose. No populate needed — admin uses `userId` from session, blog queries by slug. Service icon names map to Phosphor icon components at render time.
-
-## Rendering Patterns
-
-| Page | Pattern | Why |
-|------|---------|-----|
-| Home, About, Services | SSR (Server Component) | Fastest initial load, SEO-critical |
-| Blog list | SSR + searchParams pagination | Cacheable, works without JS |
-| Blog detail | SSR + generateMetadata | Dynamic OG images, deep-linkable |
-| Contact page | SSR shell + CSR form | Form needs client interactivity |
-| **Admin** | SSR shell + auth check | Data fetched server-side |
-| Admin blog editor | CSR form | Interactive editor, preview |
-| SSE endpoint | Edge/Node stream | Real-time admin notifications |
-| Admin login | CSR + signIn() | Credential form, redirect |
-
-## Authentication Flow
-
-```
-Request → proxy.ts → auth() → session? → /admin/* (ok) | /admin/login (redirect)
-
-Credentials login:
-  /admin/login → signIn('credentials') → authorize() → JWT → cookie
+### Service
+```typescript
+{
+  name: string
+  slug: string (unique)
+  shortDescription: string
+  fullDescription: string
+  icon: string (Phosphor icon name)
+  features: string[]
+  price: string (e.g., "Starting at $5,000")
+  popular: boolean
+  order: number
+  createdAt: Date
+  updatedAt: Date
+}
 ```
 
-- `proxy.ts` guards all `/admin/*` routes
-- Login page uses CSR `signIn()` with redirect: false
-- Admin layout uses `SessionProvider` for client-side session awareness
-- Server components use `auth()` directly
+### User (Admin)
+```typescript
+{
+  name: string
+  email: string (unique)
+  password: string (hashed)
+  role: 'admin' | 'editor'
+  image: string
+  createdAt: Date
+}
+```
 
-## Design Tokens (Linear-aligned)
+### Subscriber
+```typescript
+{
+  email: string (unique, index)
+  source: 'hero' | 'footer' | 'blog' | 'contact'
+  verified: boolean
+  createdAt: Date
+}
+```
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--color-bg-primary` | #08090A | Page background |
-| `--color-fg-primary` | #F7F8F8 | H1, H2 body text |
-| `--color-fg-secondary` | #D0D6E0 | Body text |
-| `--color-fg-tertiary` | #8A8F98 | Caption, meta |
-| `--color-accent` | #7170FF | Primary CTA, links |
-| `--color-line-primary` | #37393A | Borders, dividers |
-| `--font-size-display` | 64px / -1.408px ls | H1 hero |
-| `--font-size-title` | 1.0625rem (17px) | H3, card titles |
-| `--font-size-regular` | 0.9375rem (15px) | Body |
-| `--font-size-small` | 0.875rem (14px) | Meta, nav |
-| `--font-size-tiny` | 0.75rem (12px) | Labels, badges |
+---
 
-## Cloudinary Integration
+## 4. Key Patterns
 
-- Upload via `/api/upload` (multipart, admin-only)
-- Transformations: `q_auto`, `f_auto`
-- Images stored in `lifistudio` folder
-- Frontend renders via Cloudinary URL directly or `<Image>` with optimized URL
-- Config via env vars: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+### 4.1 Server Components First
+```tsx
+// app/page.tsx — Server Component
+export default async function HomePage() {
+  const [services, testimonials, updates] = await Promise.all([
+    getServices({ popular: true }),
+    getTestimonials({ limit: 3 }),
+    getUpdates({ limit: 4 }),
+  ])
+  
+  return (
+    <main>
+      <Hero />
+      <SocialProof />
+      <FeatureGrid features={features} />
+      <FeatureSplit {...} />
+      <Changelog updates={updates} />
+      <Testimonials items={testimonials} />
+      <CTA />
+    </main>
+  )
+}
+```
 
-## SEO & i18n/Geo
+### 4.2 Client Components Only for Interactivity
+```tsx
+// components/layout/Header.tsx — 'use client'
+'use client'
+export function Header() {
+  const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  // ... motion, dropdown, mobile menu
+}
+```
 
-- Dynamic sitemap at `/sitemap.xml` — includes all static pages + published blog posts
-- `robots.ts` blocks `/admin/` and `/api/`
-- Metadata per page via `generateMetadata` or `export const metadata`
-- JSON-LD structured data (Organization, WebSite, BlogPosting)
-- Open Graph tags for social sharing
-- `hreflang` support ready for multi-language (Indo/English)
+### 4.3 Motion Variants (Centralized)
+```tsx
+// lib/animations.ts
+export const reveal = {
+  hidden: { opacity: 0, y: 24, filter: 'blur(4px)' },
+  visible: { 
+    opacity: 1, y: 0, filter: 'blur(0)',
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+  }
+}
 
-## Setup
+export const stagger = { visible: { transition: { staggerChildren: 0.08 } } }
+
+export const cardHover = {
+  rest: { y: 0, scale: 1 },
+  hover: { y: -8, scale: 1.01, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } }
+}
+```
+
+### 4.4 Reduced Motion
+```tsx
+// hooks/useReducedMotion.ts
+export function useReducedMotion() {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return reduced
+}
+```
+
+---
+
+## 5. API Routes
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/blog` | List published posts (paginated) |
+| GET | `/api/blog/:id` | Get single post |
+| POST | `/api/blog` | Create post (admin) |
+| PATCH | `/api/blog/:id` | Update post (admin) |
+| DELETE | `/api/blog/:id` | Delete post (admin) |
+| GET | `/api/services` | List services |
+| POST | `/api/services` | Create service (admin) |
+| POST | `/api/contact` | Submit contact form |
+| POST | `/api/upload` | Upload image (Cloudinary) |
+| POST | `/api/subscribe` | Newsletter subscribe |
+| POST | `/api/auth/[...nextauth]` | NextAuth handler |
+
+---
+
+## 6. Middleware
+
+```typescript
+// middleware.ts
+export { auth as middleware } from '@/lib/auth'
+
+export const config = {
+  matcher: ['/admin/:path*', '/api/admin/:path*']
+}
+```
+
+---
+
+## 7. Environment Variables
+
+```env
+# Database
+MONGODB_URI=mongodb+srv://...
+
+# Auth
+AUTH_SECRET=...
+AUTH_GITHUB_ID=...
+AUTH_GITHUB_SECRET=...
+AUTH_GOOGLE_ID=...
+AUTH_GOOGLE_SECRET=...
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+
+# Email (Resend)
+RESEND_API_KEY=...
+CONTACT_EMAIL=hello@lifistudio.id
+
+# App
+NEXT_PUBLIC_SITE_URL=https://lifistudio.id
+```
+
+---
+
+## 8. Build & Deploy
 
 ```bash
-# 1. Start MongoDB
-docker run -d --name lifiweb2-mongo -p 27017:27017 mongo:7
+# Dev
+pnpm dev
 
-# 2. Environment
-cp .env.example .env.local
-# Fill in: MONGODB_URI, NEXTAUTH_SECRET, CLOUDINARY_*
+# Build
+pnpm build
 
-# 3. Install & seed
-npm install
-npx tsx scripts/seed.ts
+# Lint
+pnpm lint
 
-# 4. Run
-npm run dev
+# Type check
+pnpm tsc --noEmit
+
+# Deploy (Vercel)
+vercel --prod
 ```
 
-## Quick Reference
+---
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Dev server (port 3000) |
-| `npm run build` | Production build |
-| `npx tsx scripts/seed.ts` | Seed admin user + sample post |
-| Admin login | `admin@lifistudio.id` / `admin123` |
-| Admin URL | `/admin/login` then `/admin/dashboard` |
-| Upload image | Admin blog editor → `/api/upload` |
+## 9. Performance Targets (Linear parity)
+
+| Metric | Target |
+|--------|--------|
+| LCP | < 1.5s |
+| CLS | < 0.05 |
+| INP | < 100ms |
+| Bundle (JS) | < 120KB gzipped |
+| Lighthouse | 95+ all categories |
+
+---
+
+## 10. Ponytail Rules Applied
+
+| Decision | Rung | Reason |
+|----------|------|--------|
+| No UI lib (Radix, shadcn) | 5 | Phosphor + motion + Tailwind = 0 deps needed |
+| Server Components default | 3 | Native Next.js feature |
+| CSS variables for tokens | 4 | Native CSS, no JS config |
+| Inter Variable via next/font | 3 | Native platform feature |
+| motion/react only for animation | 5 | Already installed, no GSAP/Framer needed |
+| Zod for validation | 5 | Already installed |
+| Mongoose for MongoDB | 5 | Already installed |
+| NextAuth for auth | 5 | Already installed |
+| Cloudinary for images | 5 | Already installed |
+| Single repo, no monorepo | 1 | YAGNI |
+
+---
+
+## 11. File Conventions
+
+| Pattern | Convention |
+|---------|------------|
+| Component files | PascalCase.tsx |
+| Utility files | camelCase.ts |
+| Page files | page.tsx (lowercase folders) |
+| API routes | route.ts |
+| Types | types/index.ts + inline for local |
+| Constants | SCREAMING_SNAKE_CASE in constants.ts |
+| CSS classes | Tailwind only, no CSS modules |
+
+---
+
+## 12. Not Included (YAGNI)
+
+- ❌ Theme toggle (dark-only)
+- ❌ Internationalization (en/ID later)
+- ❌ Search (Algolia later)
+- ❌ Comments (Discord/Giscus later)
+- ❌ Analytics (Vercel Analytics auto)
+- ❌ Sitemap generation (next-sitemap later)
+- ❌ RSS feed (later)
+- ❌ Webhooks (later)
+- ❌ Multi-language content (later)

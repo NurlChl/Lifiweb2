@@ -1,0 +1,8 @@
+export { Hero } from './Hero'
+export { SocialProof } from './SocialProof'
+export { FeatureGrid } from './FeatureGrid'
+export { FeatureSplit } from './FeatureSplit'
+export { Changelog } from './Changelog'
+export { Testimonials } from './Testimonials'
+export { CTA } from './CTA'
+export { StatsBar } from './StatsBar'

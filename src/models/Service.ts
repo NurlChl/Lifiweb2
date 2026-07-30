@@ -1,13 +1,36 @@
-import { Schema, model, models } from 'mongoose'
+import mongoose, { type Document, type Model } from 'mongoose'
 
-const ServiceSchema = new Schema({
-  title: { type: String, required: true },
-  slug: { type: String, required: true, unique: true },
-  description: { type: String, required: true },
-  icon: String,
-  features: [String],
-  order: { type: Number, default: 0 },
-  published: { type: Boolean, default: false },
-}, { timestamps: true })
+export interface IService extends Document {
+  name: string
+  slug: string
+  shortDescription: string
+  fullDescription: string
+  icon: string
+  features: string[]
+  price: string
+  popular: boolean
+  order: number
+  createdAt: Date
+  updatedAt: Date
+}
 
-export const Service = models.Service || model('Service', ServiceSchema)
+const ServiceSchema = new mongoose.Schema<IService>(
+  {
+    name: { type: String, required: true, maxlength: 100 },
+    slug: { type: String, required: true, unique: true, index: true },
+    shortDescription: { type: String, required: true, maxlength: 300 },
+    fullDescription: { type: String, required: true },
+    icon: { type: String, required: true },
+    features: [{ type: String }],
+    price: { type: String, required: true },
+    popular: { type: Boolean, default: false },
+    order: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+)
+
+ServiceSchema.index({ order: 1 })
+
+const Service: Model<IService> = mongoose.models.Service || mongoose.model<IService>('Service', ServiceSchema)
+
+export default Service

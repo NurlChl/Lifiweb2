@@ -1,25 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { dbConnect } from '@/lib/mongodb'
-import { Contact } from '@/models/Contact'
+import { Subscriber } from '@/models/Subscriber'
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    await dbConnect()
-    const body = await req.json()
+    const body = await request.json()
+    const { name, email, phone, subject, message } = body
 
-    if (!body.name || !body.email || !body.message) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!name || !email || !subject || !message) {
+      return NextResponse.json(
+        { message: 'Missing required fields' },
+        { status: 400 }
+      )
     }
 
-    await Contact.create({
-      name: body.name,
-      email: body.email,
-      phone: body.phone || '',
-      message: body.message,
-    })
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json(
+        { message: 'Invalid email format' },
+        { status: 400 }
+      )
+    }
 
-    return NextResponse.json({ success: true })
+    // TODO: Send email via Resend/SendGrid
+    // await sendContactEmail({ name, email, phone, subject, message })
+
+    // Log for now
+    console.log('Contact form submission:', { name, email, phone, subject, message })
+
+    return NextResponse.json(
+      { message: 'Message sent successfully' },
+      { status: 200 }
+    )
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Contact form error:', error)
+    return NextResponse.json(
+      { message: 'Failed to send message' },
+      { status: 500 }
+    )
   }
 }
