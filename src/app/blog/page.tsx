@@ -6,75 +6,9 @@ import { Section } from '@/components/layout/Section'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { Calendar, Clock, ArrowRight, TwitterLogo, LinkedinLogo } from '@phosphor-icons/react/ssr'
+import { Calendar, Clock, ArrowRight } from '@phosphor-icons/react/ssr'
 import { revealVariants, staggerContainer, staggerItem } from '@/lib/animations'
-
-interface Post {
-  slug: string
-  title: string
-  excerpt: string
-  category: string
-  readTime: string
-  date: string
-  cover: string
-}
-
-const posts: Post[] = [
-  {
-    slug: 'shipping-at-ai-speed',
-    title: 'Shipping at AI Speed: How We Cut Delivery Time by 60%',
-    excerpt: 'Our AI-native workflow — from spec to production — and the tools that make it possible.',
-    category: 'Engineering',
-    readTime: '8 min',
-    date: '2025-01-15',
-    cover: '/blog/shipping-ai-speed.jpg',
-  },
-  {
-    slug: 'design-systems-that-scale',
-    title: 'Design Systems That Actually Scale',
-    excerpt: 'Why most design systems fail, and how we build ones that developers love to use.',
-    category: 'Design',
-    readTime: '6 min',
-    date: '2025-01-08',
-    cover: '/blog/design-systems-scale.jpg',
-  },
-  {
-    slug: 'autonomous-qa-agents',
-    title: 'Autonomous QA Agents: Beyond Testing',
-    excerpt: 'How AI agents are transforming quality assurance from a gate to a continuous process.',
-    category: 'AI',
-    readTime: '10 min',
-    date: '2025-01-02',
-    cover: '/blog/autonomous-qa.jpg',
-  },
-  {
-    slug: 'radical-transparency-pricing',
-    title: 'Radical Transparency in Agency Pricing',
-    excerpt: 'Why we publish our rates, and how it leads to better client relationships.',
-    category: 'Business',
-    readTime: '5 min',
-    date: '2024-12-28',
-    cover: '/blog/transparent-pricing.jpg',
-  },
-  {
-    slug: 'react-server-components-mental-model',
-    title: 'React Server Components Mental Model',
-    excerpt: 'When to use RSC, client components, and streaming. Mental models over rules.',
-    category: 'Engineering',
-    readTime: '12 min',
-    date: '2024-12-20',
-    cover: '/blog/rsc-mental-model.jpg',
-  },
-  {
-    slug: 'saas-playbook-0-to-10k',
-    title: 'From 0 to 10K MRR: Our SaaS Playbook',
-    excerpt: 'Pricing, positioning, onboarding, and retention. The exact framework we use with clients.',
-    category: 'Business',
-    readTime: '15 min',
-    date: '2024-12-12',
-    cover: '/blog/saas-playbook.jpg',
-  },
-]
+import { POSTS } from '@/lib/posts'
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-US', {
@@ -114,7 +48,7 @@ export default function BlogPage() {
             whileInView="visible"
             viewport={{ once: true, margin: '-100px' }}
           >
-            {posts.map((post) => (
+            {POSTS.map((post) => (
               <motion.article key={post.slug} variants={staggerItem} className="group">
                 <Card variant="default" padding="xl" className="h-full flex flex-col">
                   <div className="flex items-center gap-3 mb-4">

@@ -1,11 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { dbConnect } from '@/lib/mongodb'
-import { BlogPost } from '@/models/BlogPost'
-import { formatDate } from '@/lib/utils'
+import { getPost, POSTS, type PostBlock } from '@/lib/posts'
 import { Badge } from '@/components/ui/Badge'
-import { Calendar, Clock, TwitterLogo, LinkedinLogo, ArrowRight, ArrowLeft } from '@phosphor-icons/react/ssr'
+import { Calendar, Clock, TwitterLogo, LinkedinLogo, ArrowRight } from '@phosphor-icons/react/ssr'
 import { Section } from '@/components/layout/Section'
 import { PageContainer } from '@/components/layout/PageContainer'
 
@@ -13,9 +11,12 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
+export function generateStaticParams() {
+  return POSTS.map((post) => ({ slug: post.slug }))
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  await dbConnect()
-  const post = await BlogPost.findOne({ slug: (await params).slug }).lean()
+  const post = getPost((await params).slug)
 
   if (!post) {
     return { title: 'Post Not Found — Lifi Studio' }
@@ -28,25 +29,42 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: post.title,
       description: post.excerpt,
       type: 'article',
-      publishedTime: post.publishedAt?.toISOString(),
+      publishedTime: post.date,
       tags: post.tags,
-      images: post.coverImage ? [post.coverImage] : [],
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
-      images: post.coverImage ? [post.coverImage] : [],
     },
   }
 }
 
-export default async function BlogPostPage({ params }: Props) {
-  await dbConnect()
-  const { slug } = await params
-  const post = await BlogPost.findOne({ slug }).lean()
+function Block({ block }: { block: PostBlock }) {
+  switch (block.type) {
+    case 'h2':
+      return <h2 className="text-h2 font-medium text-fg-primary mt-12 mb-4">{block.text}</h2>
+    case 'ul':
+      return (
+        <ul className="my-6 space-y-3">
+          {block.items.map((item, i) => (
+            <li key={i} className="flex gap-3 text-regular text-fg-secondary leading-relaxed">
+              <span className="mt-2.5 size-1.5 shrink-0 rounded-full bg-accent" />
+              {item}
+            </li>
+          ))}
+        </ul>
+      )
+    default:
+      return <p className="my-6 text-regular text-fg-secondary leading-relaxed">{block.text}</p>
+  }
+}
 
-  if (!post || !post.published) {
+export default async function BlogPostPage({ params }: Props) {
+  const { slug } = await params
+  const post = getPost(slug)
+
+  if (!post) {
     notFound()
   }
 
@@ -65,7 +83,7 @@ export default async function BlogPostPage({ params }: Props) {
               <div className="flex items-center gap-6 text-small text-fg-quaternary mb-12">
                 <span className="flex items-center gap-1.5">
                   <Calendar size={14} weight="light" />
-                  {formatDate(post.publishedAt || post.createdAt)}
+                  {new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock size={14} weight="light" />
@@ -73,22 +91,13 @@ export default async function BlogPostPage({ params }: Props) {
                 </span>
               </div>
 
-              {post.coverImage && (
-                <div className="relative aspect-video rounded-2xl overflow-hidden mb-12">
-                  <img
-                    src={post.coverImage}
-                    alt={post.title}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-              )}
+              <div className="max-w-none">
+                {post.content.map((block, i) => (
+                  <Block key={i} block={block} />
+                ))}
+              </div>
 
-              <div
-                className="prose prose-invert max-w-none text-regular text-fg-secondary leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: post.content }}
-              />
-
-              {post.tags && post.tags.length > 0 && (
+              {post.tags.length > 0 && (
                 <div className="mt-16 pt-8 border-t border-line-tertiary">
                   <h3 className="text-title font-medium text-fg-primary mb-4">Tags</h3>
                   <div className="flex flex-wrap gap-2">
